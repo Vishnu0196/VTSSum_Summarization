@@ -9,6 +9,13 @@ This repository contains code for preprocessing lecture transcripts, generating 
    ```bash
    git clone https://github.com/yourusername/my_summarization_project.git
    cd my_summarization_project
+
+## Dataset
+
+This project uses the VT-SSum benchmark dataset, which provides spoken-language video transcripts and human-annotated segmentations and summaries. Clone it into your data/VT-SSum :
+
+      git clone https://github.com/Dod-o/VT-SSum.git 
+
 <small>
 
 ## Usage
