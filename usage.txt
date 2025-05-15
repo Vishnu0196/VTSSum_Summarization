@@ -1,0 +1,34 @@
+# 1. Preprocess transcripts into a cleaned CSV
+python src/preprocessing.py \
+  --input_dir data/VT-SSum/train \
+  --output_file data/cleaned/VTSSum_cleaned.csv
+
+# 2. Generate SBERT embeddings for summary sentences
+python src/embed.py \
+  --input_csv data/cleaned/VTSSum_cleaned.csv \
+  --output_embeddings data/embed/sample_embeddings.npy \
+  --sample_n 10000
+
+# 3. Create contrastive training pairs
+python src/pair_generation.py \
+  --input_csv data/cleaned/VTSSum_cleaned_sampled.csv \
+  --embeddings data/embed/sample_embeddings.npy \
+  --output_csv data/pairs/contrastive_pairs.csv
+
+# 4. Train a contrastive Sentence-BERT model
+python src/train.py \
+  --pairs_csv data/pairs/contrastive_pairs.csv \
+  --model_out models/fine_tuned_sbert
+
+# 5. Evaluate summarization performance
+python src/evaluate.py \
+  --model_dir models/fine_tuned_sbert \
+  --test_dir data/VT-SSum/test
+
+# 6. Batch GPT-based evaluation
+python src/gpt_batch_evaluate.py \
+  --test_folder data/VT-SSum/test \
+  --output_csv results/gpt_eval.csv \
+  --batch_size 50 \
+  --start_index 0 \
+  --openai_key YOUR_OPENAI_API_KEY
