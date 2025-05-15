@@ -1,0 +1,13 @@
+huggingface_hub==0.22.2
+transformers==4.40.2
+sentence-transformers==2.7.0
+datasets==2.18.0
+pandas
+numpy
+tqdm
+faiss-cpu
+scikit-learn
+segeval
+rouge-score
+bert-score
+torch
