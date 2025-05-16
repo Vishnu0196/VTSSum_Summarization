@@ -28,7 +28,10 @@ test_eval_results.csv, eval_llm_962.csv:  This file contains qualitative evaluat
    `python src/preprocessing.py --input_dir data/VT-SSum/train --output_file data/cleaned/VTSSum_cleaned.csv`
 
 2. Generate SBERT embeddings  
-   `python src/embed.py --input_csv data/cleaned/VTSSum_cleaned.csv --output_embeddings data/embed/sample_embeddings.npy --sample_n 10000`
+   `python src/embed.py \
+  --input_csv data/cleaned/VTSSum_cleaned.csv \
+  --output_embeddings data/embed/all_embeddings.npy \
+  --output_csv data/cleaned/VTSSum_cleaned_sampled.csv `
 
 3. Create contrastive pairs  
    `python src/pair_generation.py --input_csv data/cleaned/VTSSum_cleaned_sampled.csv --embeddings data/embed/sample_embeddings.npy --output_csv data/pairs/contrastive_pairs.csv`
