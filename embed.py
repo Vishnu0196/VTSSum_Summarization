@@ -5,52 +5,63 @@ import pandas as pd
 from sentence_transformers import SentenceTransformer
 
 
-def generate_embeddings(input_csv, output_npy, sample_n):
-    """
-    Reads a CSV of sentences with summary labels, samples summary sentences,
-    computes embeddings using a SentenceTransformer model, and saves both the
-    embeddings array and an updated CSV with embeddings.
+def main():
+    parser = argparse.ArgumentParser(
+        description='Generate embeddings for all sentences in a CSV file'
+    )
+    parser.add_argument(
+        '--input_csv', required=True,
+        help='Path to input CSV with a "sentence" column'
+    )
+    parser.add_argument(
+        '--output_embeddings', required=True,
+        help='Path to save NumPy .npy embeddings file'
+    )
+    parser.add_argument(
+        '--output_csv', required=True,
+        help='Path to save augmented CSV with embeddings'
+    )
+    parser.add_argument(
+        '--model_name', default='all-MiniLM-L6-v2',
+        help='SentenceTransformer model identifier'
+    )
+    parser.add_argument(
+        '--batch_size', type=int, default=32,
+        help='Batch size for embedding generation'
+    )
+    args = parser.parse_args()
 
-    Args:
-        input_csv (str): Path to input CSV containing 'sentence' and 'is_summary' columns.
-        output_npy (str): Path to save the numpy array of embeddings (.npy).
-        sample_n (int): Number of summary sentences to sample for embedding.
-    """
-    # Load the CSV into a DataFrame
-    df = pd.read_csv(input_csv)
+    # Read all sentences
+    df = pd.read_csv(args.input_csv)
+    if 'sentence' not in df.columns:
+        raise ValueError("Input CSV must contain a 'sentence' column")
+    sentences = df['sentence'].astype(str).tolist()
 
-    # Filter to sentences marked as summary and sample a subset
-    df_summary = df[df['is_summary'] == 1].sample(n=sample_n, random_state=42)
+    # Load model and compute embeddings
+    model = SentenceTransformer(args.model_name)
+    embeddings = model.encode(
+        sentences,
+        batch_size=args.batch_size,
+        show_progress_bar=True,
+        convert_to_numpy=True
+    )
 
-    # Extract sentences for embedding
-    sentences = df_summary['sentence'].tolist()
+    # Ensure output directories exist
+    os.makedirs(os.path.dirname(args.output_embeddings), exist_ok=True)
+    os.makedirs(os.path.dirname(args.output_csv), exist_ok=True)
 
-    # Load the pretrained embedding model
-    model = SentenceTransformer('all-MiniLM-L6-v2')
+    # Save embeddings array
+    np.save(args.output_embeddings, embeddings)
 
-    # Compute embeddings with a progress bar
-    embeddings = model.encode(sentences, show_progress_bar=True)
+    # Attach embeddings to DataFrame and save
+    df['embedding'] = embeddings.tolist()
+    df.to_csv(args.output_csv, index=False)
 
-    # Ensure output directory exists
-    os.makedirs(os.path.dirname(output_npy), exist_ok=True)
-
-    # Save embeddings array to disk
-    np.save(output_npy, embeddings)
-
-    # Add embeddings to DataFrame and save updated CSV
-    df_summary = df_summary.reset_index(drop=True)
-    df_summary['embedding'] = embeddings.tolist()
-    sampled_csv = input_csv.replace('.csv', '_sampled.csv')
-    df_summary.to_csv(sampled_csv, index=False)
+    print(
+        f"Saved {len(sentences)} embeddings to {args.output_embeddings} "
+        f"and augmented CSV to {args.output_csv}"
+    )
 
 
 if __name__ == '__main__':
-    # Setup command-line argument parsing
-    parser = argparse.ArgumentParser(description='Generate sentence embeddings for summary samples')
-    parser.add_argument('--input_csv', required=True, help='Path to the input CSV file')
-    parser.add_argument('--output_embeddings', required=True, help='Path to output .npy embeddings file')
-    parser.add_argument('--sample_n', type=int, default=10000, help='Number of summary sentences to sample')
-    args = parser.parse_args()
-
-    # Generate and save embeddings
-    generate_embeddings(args.input_csv, args.output_embeddings, args.sample_n)
+    main()
