@@ -6,8 +6,10 @@ python src/preprocessing.py \
 # 2. Generate SBERT embeddings for summary sentences
 python src/embed.py \
   --input_csv data/cleaned/VTSSum_cleaned.csv \
-  --output_embeddings data/embed/sample_embeddings.npy \
-  --sample_n 10000
+  --output_embeddings data/embed/all_embeddings.npy \
+  --output_csv data/cleaned/VTSSum_with_embeddings.csv \
+  --model_name all-MiniLM-L6-v2 \
+  --batch_size 32
 
 # 3. Create contrastive training pairs
 python src/pair_generation.py \
